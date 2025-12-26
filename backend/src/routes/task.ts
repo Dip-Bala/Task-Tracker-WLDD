@@ -8,8 +8,8 @@ taskRouter.use(verifyToken);
 
 taskRouter.post('/', addTask);
 taskRouter.get('/', getAllTask);
-taskRouter.put('/', updateTask);
-taskRouter.delete('/', deleteTask);
+taskRouter.put('/:id', updateTask);
+taskRouter.delete('/:id', deleteTask);
 
 
 export default taskRouter;
