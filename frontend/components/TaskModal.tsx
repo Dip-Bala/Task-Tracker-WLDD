@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 
+type TaskStatus = "PENDING" | "WORKING ON" | "DONE"
 type Props = {
   onClose: () => void;
   onSubmit: (data: any) => void;
   defaultValues?: {
     title: string;
     description?: string;
-    status: "PENDING" | "DONE";
+    status: TaskStatus;
   } | null;
 };
 
@@ -19,7 +20,7 @@ export default function TaskModal({
 }: Props) {
   const [title, setTitle] = useState(defaultValues?.title || "");
   const [description, setDescription] = useState(defaultValues?.description || "");
-  const [status, setStatus] = useState<"PENDING" | "DONE">(
+  const [status, setStatus] = useState<TaskStatus>(
     defaultValues?.status || "PENDING"
   );
 

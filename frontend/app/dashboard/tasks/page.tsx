@@ -31,13 +31,12 @@ export default function TasksPage() {
     if (isError) router.replace("/login");
   }, [isError, router]);
 
-  // ─────────────────── TASKS FETCH ───────────────────
   const { data: tasks, isLoading } = useQuery<Task[]>({
     queryKey: ["tasks"],
     queryFn: () => api.get("/tasks").then(res => res.data.tasks),
   });
 
-  // ─────────────────── MUTATIONS ───────────────────
+
   const createTask = useMutation({
     mutationFn: (data: Partial<Task>) => api.post("/tasks", data),
     onSuccess: () => {
@@ -68,7 +67,7 @@ export default function TasksPage() {
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
+
       <div className="flex justify-between items-center">
         <h1 className="text-xl font-semibold">Tasks</h1>
         <button
@@ -79,7 +78,7 @@ export default function TasksPage() {
         </button>
       </div>
 
-      {/* TASK LIST */}
+
       <div className="space-y-3">
         {tasks?.length === 0 && <p>No tasks yet.</p>}
 
@@ -126,7 +125,7 @@ export default function TasksPage() {
         ))}
       </div>
 
-      {/* MODAL */}
+
       {showModal && (
         <TaskModal
           onClose={() => {
