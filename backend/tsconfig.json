@@ -10,8 +10,10 @@
     "types": [
       "node"
     ],
+    "typeRoots": ["./src/types", "./node_modules/@types"],
      "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
   }
+  
 }

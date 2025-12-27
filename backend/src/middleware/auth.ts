@@ -24,7 +24,12 @@ export const verifyToken = async (
   }
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    const user = await User.findOne({ _id: decoded.id  });
+    const user = await User.findById(decoded.id);
+    if(!user){
+      return res.status(401).json({
+        message: "User not found",
+      });
+    }
     // @ts-ignore
     req.user = user;
     next();

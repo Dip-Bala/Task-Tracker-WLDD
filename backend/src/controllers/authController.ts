@@ -31,18 +31,16 @@ export const RegisterController = async(req: Request, res: Response) => {
     // const {name, email, password}:IUser = req.body;
     const result = RegisterSchema.safeParse(req.body);
     if(!result.success){
-        return res.send({
-            message: result.error,
-            status: 403
+        return res.status(400).json({
+            message: result.error
         })
     }
     const {name, email, password} = result.data;
     // Check if the user is already signed up if yes return error
     const user = await findUser(email);
     if(user){
-        return res.json({
-            "message": "User with this email already exists",
-            status: 401
+        return res.status(409).json({
+            "message": "User with this email already exists"
         })
     }
 
@@ -54,7 +52,7 @@ export const RegisterController = async(req: Request, res: Response) => {
         role: 'USER'
     });
 
-    return res.json({
+    return res.status(200).json({
         "message": "User registration successful."
     })
 }
@@ -63,26 +61,23 @@ export const LoginController = async(req: Request, res: Response) => {
     // const {name, email, password}:IUser = req.body;
     const result = LoginSchema.safeParse(req.body);
     if(!result.success){
-        return res.send({
-            message: result.error,
-            status: 403
+        return res.status(400).send({
+            message: result.error
         })
     }
     const {email, password} = result.data;
 
     const user = await findUser(email);
     if(!user){
-        return res.json({
-            "message": "No user with this email found",
-            status: 401
+        return res.status(401).json({
+            "message": "No user with this email found"
         })
     }
 
     const match = await bcrypt.compare(password, user.password);
     if(!match){
-        return res.json({
-            message: "The password does not match",
-            status: 403
+        return res.status(401).json({
+            message: "Invalid Password",
         })
     }
     // console.log(user);
@@ -91,8 +86,10 @@ export const LoginController = async(req: Request, res: Response) => {
     res.cookie('access_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+         maxAge: 60 * 60 * 1000
     })
-    return res.json({
+    return res.status(201).json({
         "message": "Login successful.",
         "user": {
             "name": user.name,
@@ -105,9 +102,14 @@ export const LoginController = async(req: Request, res: Response) => {
 
 export const MeController = async(req: Request, res: Response) => {
     const user = req.user;
-    console.log(user);
-    return res.json({
-        status: 200,
+    // console.log(user);
+    if (!user) {
+  return res.status(401).json({
+    message: "Unauthorized"
+  });
+}
+
+    return res.status(201).json({
         user: {
             name: user?.name,
             email: user?.email,

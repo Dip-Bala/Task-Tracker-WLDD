@@ -8,6 +8,7 @@ declare global {
         name: string;
         role: "USER" | "ADMIN";
         email: string;
+        password: string
       };
     }
   }
