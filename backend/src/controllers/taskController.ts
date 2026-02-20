@@ -1,27 +1,64 @@
-import { Router } from "express";
-import Task from "../models/taskSchema.js";
 import { Request, Response } from "express";
+import z from "zod";
+import { isValidObjectId } from "mongoose";
+import Task from "../models/taskSchema";
+import { redisClient } from "../config/redis";
+
+const TASK_CACHE_TTL_SECONDS = 60;
+
+function getTasksCacheKey(userId: string) {
+  return `tasks:${userId}`;
+}
+
+async function invalidateTaskCache(userId: string) {
+  if (!redisClient.isOpen) {
+    return;
+  }
+
+  try {
+    await redisClient.del(getTasksCacheKey(userId));
+  } catch (error) {
+    console.error("Failed to invalidate task cache:", error);
+  }
+}
+
+const createTaskSchema = z.object({
+  title: z.string().trim().min(1, "Title is required"),
+  description: z.string().trim().optional(),
+  status: z.enum(["pending", "completed"]).optional(),
+  dueDate: z.coerce.date(),
+});
+
+const updateTaskSchema = createTaskSchema
+  .partial()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field is required to update a task",
+  });
 
 export async function addTask(req: Request, res: Response) {
-  const { title, description, status } = req.body;
   const user = req.user;
-  if (!title) {
-    return res.status(400).json({ message: "Title is required" });
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
+
+  const result = createTaskSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ message: result.error.flatten() });
+  }
+
   try {
-    const response = await Task.create({
-      title,
-      description,
-      status,
-      user: user?.id,
+    const task = await Task.create({
+      ...result.data,
+      owner: user.id,
     });
-    // console.log(response);
+    await invalidateTaskCache(user.id);
+
     return res.status(201).json({
-      task: response,
-      message: "New Task added successfully",
+      task,
+      message: "Task created successfully",
     });
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Failed to create task",
     });
@@ -30,19 +67,36 @@ export async function addTask(req: Request, res: Response) {
 
 export async function getAllTask(req: Request, res: Response) {
   const user = req.user;
-  let tasks;
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
   try {
-    if (user?.role === "ADMIN") {
-      tasks = await Task.find({}).populate("user", "name email");
-      console.log(tasks);
-    } else {
-      tasks = await Task.find({
-        user: user?.id,
+    const cacheKey = getTasksCacheKey(user.id);
+    if (redisClient.isOpen) {
+      const cachedTasks = await redisClient.get(cacheKey);
+
+      if (cachedTasks) {
+        return res.status(200).json({
+          tasks: JSON.parse(cachedTasks),
+          source: "cache",
+        });
+      }
+    }
+
+    const tasks = await Task.find({ owner: user.id })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (redisClient.isOpen) {
+      await redisClient.set(cacheKey, JSON.stringify(tasks), {
+        EX: TASK_CACHE_TTL_SECONDS,
       });
     }
-    // console.log(tasks);
+
     return res.status(200).json({ tasks });
-  } catch (e) {
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Failed to fetch tasks",
     });
@@ -51,38 +105,44 @@ export async function getAllTask(req: Request, res: Response) {
 
 export async function updateTask(req: Request, res: Response) {
   const taskId = req.params.id;
+  const user = req.user;
+
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
   if (!taskId) {
     return res.status(400).json({ message: "Task ID is required" });
   }
-  const user = req.user;
+  if (!isValidObjectId(taskId)) {
+    return res.status(400).json({ message: "Invalid task ID" });
+  }
+
+  const result = updateTaskSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ message: result.error.flatten() });
+  }
 
   try {
-    const task = await Task.findById(taskId);
+    const task = await Task.findOneAndUpdate(
+      { _id: taskId, owner: user.id },
+      { $set: result.data },
+      { new: true, runValidators: true }
+    );
+
     if (!task) {
       return res.status(404).json({
         message: "Task not found",
       });
     }
-    // console.log(task);
-    // console.log('user', req.user)
-    // console.log(req.user?.id)
-    if (task?.user?.toString() !== user!.id) {
-      return res.status(403).json({
-        message: "You are not allowed this action.",
-      });
-    }
+    await invalidateTaskCache(user.id);
 
-    const { title, description, status } = req.body;
-    task.title = title ?? task.title;
-    task.description = description ?? task.description;
-    task.status = status ?? task.status;
-
-    const response = await Task.updateOne({ _id: taskId }, task);
     return res.status(200).json({
-      message: "Task upadted successfully",
+      message: "Task updated successfully",
+      task,
     });
-  } catch (e: any) {
-    console.error(e);
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Failed to update task",
     });
@@ -91,39 +151,37 @@ export async function updateTask(req: Request, res: Response) {
 
 export async function deleteTask(req: Request, res: Response) {
   const taskId = req.params.id;
-  // console.log(taskId);
-  if (!taskId) {
-    return res.status(400).json({
-      message: "Task Id is required",
-    });
-  }
   const user = req.user;
 
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  if (!taskId) {
+    return res.status(400).json({ message: "Task ID is required" });
+  }
+  if (!isValidObjectId(taskId)) {
+    return res.status(400).json({ message: "Invalid task ID" });
+  }
+
   try {
-    const task = await Task.findOne({
+    const deletedTask = await Task.findOneAndDelete({
       _id: taskId,
+      owner: user.id,
     });
-    if (!task) {
+
+    if (!deletedTask) {
       return res.status(404).json({
         message: "Task not found",
       });
     }
-    // console.log(task);
+    await invalidateTaskCache(user.id);
 
-    if (task?.user?.toString() !== user!.id) {
-      return res.status(403).json({
-        message: "You are not allowed this action.",
-      });
-    }
-
-    await Task.deleteOne({
-      _id: taskId,
-    });
     return res.status(200).json({
       message: "Task deleted successfully",
     });
-  } catch (e: any) {
-    console.error(e);
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Failed to delete task",
     });

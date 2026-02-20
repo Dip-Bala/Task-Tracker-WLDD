@@ -20,42 +20,41 @@ export default function SettingsPage() {
     window.location.href = "/login";
   };
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <p className="text-white/50">Loading...</p>;
 
   return (
-    <div className="space-y-6 max-w-xl">
-      <h1 className="text-xl font-semibold">Settings</h1>
+    <div className="space-y-10 max-w-xl mx-auto px-6 py-10">
+      <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
 
-      <div className="border-t border-primary rounded-xl p-5 shadow-md space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-full bg-primary text-background">
+      <div className="bg-[var(--color-muted-background)] border border-white/5 rounded-2xl p-6 space-y-6">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-[var(--color-indigo)] text-white">
             <User size={20} />
           </div>
-          <h2 className="text-lg font-medium">Account Information</h2>
+          <h2 className="text-lg font-semibold">Account Information</h2>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div>
-            <p className="text-sm text-muted-foreground">Name</p>
-            <p className="font-medium">{user.name}</p>
+            <p className="text-xs text-white/40 uppercase tracking-wide">
+              Name
+            </p>
+            <p className="text-sm font-medium">{user.name}</p>
           </div>
 
           <div>
-            <p className="text-sm text-muted-foreground">Email</p>
-            <p className="font-medium">{user.email}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-muted-foreground">Role</p>
-            <p className="font-medium">{user.role}</p>
+            <p className="text-xs text-white/40 uppercase tracking-wide">
+              Email
+            </p>
+            <p className="text-sm font-medium">{user.email}</p>
           </div>
         </div>
       </div>
 
-      <div className="shadow-sm  rounded-xl p-5">
+      <div className="bg-[var(--color-muted-background)] border border-white/5 rounded-2xl p-6">
         <button
           onClick={() => setShowLogout(true)}
-          className="w-full text-red-600  font-medium flex items-center gap-2 cursor-pointer"
+          className="flex items-center gap-2 text-[var(--color-red)] hover:bg-[var(--color-red)]/10 px-4 py-2 rounded-xl transition cursor-pointer"
         >
           <LogOut size={18} />
           Logout
@@ -63,24 +62,24 @@ export default function SettingsPage() {
       </div>
 
       {showLogout && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-[320px] space-y-4">
-            <h3 className="font-semibold text-lg">Confirm Logout</h3>
-            <p className="text-sm text-gray-600">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+          <div className="bg-[var(--color-muted-background)] border border-white/5 rounded-2xl p-8 w-[340px] space-y-6">
+            <h3 className="text-lg font-semibold">Confirm Logout</h3>
+            <p className="text-sm text-white/60">
               Are you sure you want to log out?
             </p>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-4">
               <button
                 onClick={() => setShowLogout(false)}
-                className="px-4 py-2 cursor-pointer rounded-md"
+                className="px-4 py-2 rounded-xl border border-white/10 text-white/70 hover:text-white transition cursor-pointer"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 bg-red-500 text-white rounded-md cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[var(--color-red)] text-white hover:opacity-90 transition cursor-pointer"
               >
                 Logout
               </button>

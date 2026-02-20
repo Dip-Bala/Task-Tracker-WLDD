@@ -2,12 +2,12 @@
 
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { AxiosError } from "axios";
 import { z } from "zod";
 import { api } from "../../lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { LogIn } from "lucide-react";
-import { BaseSchema } from "../register/page";
+import { BaseSchema } from "../signup/page";
 import Link from "next/link";
 import ErrorAlert from "@/components/ErrorAlert";
 import { useState } from "react";
@@ -20,7 +20,6 @@ const LoginSchema = BaseSchema.pick({
 export type LoginValuesType = z.infer<typeof LoginSchema>;
 
 export default function Page() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
@@ -40,11 +39,13 @@ export default function Page() {
       queryClient.setQueryData(["me"], res.data.user);
       window.location.href = "/dashboard";
     },
-    onError: (err: any) => {
-    const message =
-      err?.response?.data?.message || "Something went wrong. Please try again.";
-    setError(message);
-  },
+    onError: (err: unknown) => {
+      const axiosError = err as AxiosError<{ message?: string }>;
+      const message =
+        axiosError.response?.data?.message ||
+        "Something went wrong. Please try again.";
+      setError(message);
+    },
   });
 
   const onSubmit: SubmitHandler<LoginValuesType> = (data) => {
@@ -62,7 +63,7 @@ export default function Page() {
 
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col gap-4 w-sm rounded-2xl shadow-md px-6 py-8 bg-linear-to-b from-primary to-background to-10%"
+      className="flex flex-col gap-4 w-sm rounded-2xl px-6 py-8 bg-muted-background  border border-white/5 shadow-[0_0_30px_rgba(0,0,0,0.25)]"
     >
       <div className="flex items-center gap-2 text-foreground font-medium text-lg">
         <LogIn />
@@ -73,10 +74,10 @@ export default function Page() {
         <label>Email</label>
         <input
           {...register("email")}
-          className="border rounded-md px-3 py-2 border-zinc-400 focus:outline-primary "
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 placeholder:text-white/30 focus:outline-none focus:border-indigo focus:ring-1 focus:ring-indigo transition"
         />
         {errors.email && (
-          <p className="text-sm text-red-500">{errors.email.message}</p>
+          <p className="text-sm text-[var(--color-red)]">{errors.email.message}</p>
         )}
       </div>
 
@@ -86,10 +87,10 @@ export default function Page() {
         <input
           type="password"
           {...register("password")}
-          className="border rounded-md px-3 py-2 border-zinc-400 focus:outline-primary "
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 placeholder:text-white/30 focus:outline-none focus:border-indigo focus:ring-1 focus:ring-indigo transition"
         />
         {errors.password && (
-          <p className="text-sm text-red-500">{errors.password.message}</p>
+          <p className="text-sm text-red">{errors.password.message}</p>
         )}
       </div>
 
@@ -99,8 +100,8 @@ export default function Page() {
         className={`rounded-md px-4 py-2 transition-all
           ${
             isValid
-              ? "bg-foreground text-background cursor-pointer"
-              : "bg-primary text-background cursor-not-allowed"
+              ? "bg-indigo text-white cursor-pointer"
+              : "bg-indigo/70 text-white/70 cursor-pointer"
           }
         `}
       >
@@ -108,8 +109,8 @@ export default function Page() {
       </button>
       <p className="text-sm text-center mt-2">
         Don’t have an account?{" "}
-        <Link href="/register" className="text-foreground font-medium hover:underline cursor-pointer">
-          Register
+        <Link href="/signup" className="text-foreground font-medium hover:underline cursor-pointer">
+          Sign Up
         </Link>
       </p>
     </form>

@@ -1,6 +1,6 @@
 import {Router} from 'express';
-import {addTask, getAllTask, updateTask, deleteTask} from '../controllers/taskController.js';
-import {verifyToken} from '../middleware/auth.js';
+import {addTask, getAllTask, updateTask, deleteTask} from '../controllers/taskController';
+import {verifyToken} from '../middleware/auth';
 
 const taskRouter = Router();
 

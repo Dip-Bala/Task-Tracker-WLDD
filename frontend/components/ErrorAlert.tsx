@@ -27,11 +27,11 @@ export default function ErrorAlert({
   if (!visible) return null;
 
   return (
-    <div className="fixed top-6 right-6 z-50 bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3">
+    <div className="fixed top-6 right-6 z-50 bg-accent text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3">
       <span className="font-medium">{message}</span>
       <button
         onClick={() => setVisible(false)}
-        className="ml-2 text-white font-bold"
+        className="ml-2 text-white font-bold cursor-pointer"
       >
         ×
       </button>

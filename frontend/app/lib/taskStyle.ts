@@ -1,19 +1,13 @@
-export type TaskStatus = "PENDING" | "WORKING ON" | "DONE";
+export type TaskStatus = "pending" | "completed";
 
-export const statusStyles: Record<
-  TaskStatus,
-  { bg: string; text: string }
-> = {
-  PENDING: {
-    bg: "bg-amber-100",
-    text: "text-amber-700",
+
+export const statusStyles: Record<TaskStatus, { bg: string; text: string }> = {
+  pending: {
+    bg: "bg-yellow/15",
+    text: "text-yellow",
   },
-  "WORKING ON": {
-    bg: "bg-blue-100",
-    text: "text-blue-700",
-  },
-  DONE: {
-    bg: "bg-green-100",
-    text: "text-green-700",
+  completed: {
+    bg: "bg-green-light/15",
+    text: "text-green-light",
   },
 };

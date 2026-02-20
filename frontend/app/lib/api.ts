@@ -5,4 +5,4 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-process.env.NEXT_PUBLIC_BACKEND_URL
+// process.env.NEXT_PUBLIC_BACKEND_URL

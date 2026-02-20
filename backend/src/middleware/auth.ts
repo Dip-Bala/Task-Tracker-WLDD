@@ -1,21 +1,25 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import User from "../models/userSchema.js";
-const JWT_SECRET = process.env.JWT_SECRET as string;
+import User from "../models/userSchema";
 
 interface JwtPayload {
-  id: String;
-  role: "USER" | "ADMIN";
+  id: string;
 }
+
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT Secret is not loaded from .env");
+  }
+  return secret;
+}
+
 export const verifyToken = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-
   const token = req.cookies?.access_token;
-
-//   console.log("token", token);
 
   if (!token) {
     return res.status(401).json({
@@ -23,18 +27,23 @@ export const verifyToken = async (
     });
   }
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JwtPayload;
     const user = await User.findById(decoded.id);
-    if(!user){
+    if (!user) {
       return res.status(401).json({
         message: "User not found",
       });
     }
-    // @ts-ignore
-    req.user = user;
+
+    req.user = {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+    };
+
     next();
   } catch (e) {
-    console.log(e);
+    console.error(e);
     return res.status(401).json({
       message: "Invalid or expired token",
     });

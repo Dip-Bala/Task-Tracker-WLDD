@@ -31,7 +31,7 @@ export default function Page() {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: SignUpValuesType) => api.post("/auth/register", data),
+    mutationFn: (data: SignUpValuesType) => api.post("/auth/signup", data),
     onSuccess: () => {
       router.push("/login");
     },
@@ -47,7 +47,7 @@ export default function Page() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col gap-4  w-sm rounded-2xl shadow-md px-6 py-8 bg-linear-to-b from-primary to-background to-10%"
+      className="flex flex-col gap-4 w-sm rounded-2xl px-6 py-8 bg-muted-background border border-white/5 shadow-[0_0_30px_rgba(0,0,0,0.25)]"
     >
       <div className="">
         <p className="text-foreground font-medium text-lg flex gap-2">
@@ -59,10 +59,10 @@ export default function Page() {
         <label>Name</label>
         <input
           {...register("name")}
-          className="border rounded-md px-3 py-2 border-zinc-400 focus:outline-primary "
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 placeholder:text-white/30 focus:outline-none focus:border-indigo focus:ring-1 focus:ring-indigo transition"
         />
         {errors.name && (
-          <p className="text-sm text-red-500">{errors.name.message}</p>
+          <p className="text-sm text-red">{errors.name.message}</p>
         )}
       </div>
 
@@ -70,10 +70,10 @@ export default function Page() {
         <label>Email</label>
         <input
           {...register("email")}
-          className="border rounded-md px-3 py-2 border-zinc-400 focus:outline-primary "
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 placeholder:text-white/30 focus:outline-none focus:border-indigo focus:ring-1 focus:ring-indigo transition"
         />
         {errors.email && (
-          <p className="text-sm text-red-500">{errors.email.message}</p>
+          <p className="text-sm text-red">{errors.email.message}</p>
         )}
       </div>
 
@@ -83,10 +83,10 @@ export default function Page() {
         <input
           type="password"
           {...register("password")}
-          className="border rounded-md px-3 py-2 border-zinc-400 focus:outline-primary "
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 placeholder:text-white/30 focus:outline-none focus:border-indigo focus:ring-1 focus:ring-indigo transition"
         />
         {errors.password && (
-          <p className="text-sm text-red-500">{errors.password.message}</p>
+          <p className="text-sm text-red">{errors.password.message}</p>
         )}
       </div>
 
@@ -96,8 +96,8 @@ export default function Page() {
         className={`rounded-md px-4 py-2 transition-all 
           ${
             isValid
-              ? "bg-foreground text-background cursor-pointer"
-              : "bg-primary text-background cursor-not-allowed"
+              ? "bg-indigo text-white cursor-pointer"
+              : "bg-indigo/70 text-white/70 cursor-pointer"
           }
         `}
       >

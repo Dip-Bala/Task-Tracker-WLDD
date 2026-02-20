@@ -1,17 +1,6 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { api } from "../app/lib/api";
 import Image from "next/image";
 
 export default function Navbar() {
-  const router = useRouter();
-
-  const logout = async () => {
-    await api.post("/auth/logout");
-    router.push("/login");
-  };
-
   return (
     <div className="h-14 flex items-center px-8 py-10">
       <div className="flex items-center">
@@ -21,7 +10,7 @@ export default function Navbar() {
                 width={40}
                 height={20} 
             />
-            <span className="text-[#243E36] font-bold text-lg">Flowboard</span>
+            <span className="text-foreground font-bold text-lg">Flowboard</span>
             </div>
     </div>
   );

@@ -1,37 +1,27 @@
-import express from "express";
 import dotenv from "dotenv";
-import cors from "cors";
-import { connectDB } from "./config/db.js";
-import authRouter from "./routes/auth.js";
-import cookieParser from "cookie-parser";
-import taskRouter from "./routes/task.js";
-
 dotenv.config();
-const frontend_url = process.env.FRONTEND_URL as string;
 
-if(!frontend_url){
-  throw Error("Frontend url is not loaded from env")
-}
-const app = express();
-app.use(express.json());
-app.use(cookieParser());
-app.use(
-  cors({
-    origin: [frontend_url],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+import app from "./app";
+import { connectDB } from "./config/db";
+import { connectRedis } from "./config/redis";
 
-// app.use(authRouter)
-app.use("/auth", authRouter);
-app.use("/tasks", taskRouter);
+const PORT = process.env.PORT || 3001;
 
 async function main() {
-  await connectDB();
-  app.listen(process.env.PORT, () =>
-    console.log("app is running on port " + process.env.PORT)
+  try {
+    await connectDB();
+  } catch (e) {
+    console.log("Error connecting to MongoDB");
+  }
+
+  try {
+    await connectRedis();
+  } catch (error) {
+    console.error("Failed to connect Redis. Continuing without cache.");
+  }
+
+  app.listen(PORT, () =>
+    console.log("app is running on port " + PORT)
   );
 }
 

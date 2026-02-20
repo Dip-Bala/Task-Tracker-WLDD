@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, ListTodo, Settings } from "lucide-react";
+import Image from "next/image";
 
 const navItems = [
   {
@@ -27,8 +28,18 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="hidden md:flex w-64 p-6 border-r border-primary/90 shadow-primary bg-background">
+      <aside className="hidden md:flex w-64 p-6 border-r border-muted-background bg-muted-background text-foreground">
         <nav className="flex flex-col gap-2 w-full">
+          <div className="flex items-center gap-2 mb-4">
+                      <Image
+                          src='/logo.svg'
+                          alt='Flowboard'
+                          width={30}
+                          height={30} 
+                          className="fill-foreground text-foreground"
+                      />
+                      <span className="text-muted-foreground font-bold text-lg">Flowboard</span>
+                      </div>
           {navItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -41,8 +52,8 @@ export default function Sidebar() {
                 className={`flex items-center gap-3 px-3 py-2 rounded-md transition
                   ${
                     isActive
-                      ? "bg-foreground text-background font-semibold"
-                      : "text-foreground hover:bg-secondary/50"
+                      ? "bg-indigo font-semibold"
+                      : "text-foreground hover:bg-"
                   }
                 `}
               >
@@ -65,7 +76,7 @@ export default function Sidebar() {
               key={item.name}
               href={item.href}
               className={`flex flex-col items-center text-xs transition ${
-                isActive ? "text-primary" : "text-foreground"
+                isActive ? "bg-indigo " : "text-foreground"
               }`}
             >
               <item.icon size={22} />

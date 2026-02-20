@@ -5,19 +5,29 @@ import { api } from "@/app/lib/api";
 import { useState } from "react";
 import TaskCard from "@/components/TaskCard";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { statusStyle } from "../page";
+import { statusStyles, type TaskStatus } from "@/app/lib/taskStyle";
 
-export type StatusType = "PENDING" | "WORKING ON" | "DONE";
 type Task = {
   _id: string;
   title: string;
   description?: string;
-  status: StatusType;
+  status: TaskStatus;
+  dueDate: string;
 };
+
+type TaskPayload = {
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  dueDate: string;
+};
+
+function statusLabel(status: TaskStatus) {
+  return status === "pending" ? "Pending" : "Completed";
+}
 
 export default function TasksPage() {
   const queryClient = useQueryClient();
-
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -30,7 +40,7 @@ export default function TasksPage() {
   });
 
   const createTask = useMutation({
-    mutationFn: (data: Partial<Task>) => api.post("/tasks", data),
+    mutationFn: (data: TaskPayload) => api.post("/tasks", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       setIsCreating(false);
@@ -38,7 +48,7 @@ export default function TasksPage() {
   });
 
   const updateTask = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Task> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<TaskPayload> }) =>
       api.put(`/tasks/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
@@ -53,18 +63,17 @@ export default function TasksPage() {
     },
   });
 
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center ">
-        <h1 className="text-xl font-semibold">Tasks</h1>
+    <div className="space-y-10 max-w-6xl mx-auto px-6 py-10">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
 
         <button
           onClick={() => setIsCreating(true)}
-          className="bg-foreground text-background px-4 py-2 rounded flex items-center gap-2 cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2 rounded-2xl bg-indigo text-white hover:opacity-90 transition cursor-pointer"
         >
-          <Plus size={18}/>
-           Add Task
+          <Plus size={18} />
+          Add Task
         </button>
       </div>
 
@@ -75,49 +84,64 @@ export default function TasksPage() {
         />
       )}
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 ">
+        {tasks.map((task) =>
+          editingId === task._id ? (
+            <TaskCard
+              key={task._id}
+              task={task}
+              onSave={(data) =>
+                updateTask.mutate({ id: task._id, data })
+              }
+              onCancel={() => setEditingId(null)}
+            />
+          ) : (
+            <div
+              key={task._id}
+              className="bg-muted-background border border-white/5 rounded-2xl p-6 flex justify-between items-start gap-6 transition hover:border-indigo"
+            >
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold tracking-tight">
+                  {task.title}
+                </h3>
 
-      {tasks.map((task) =>
-        editingId === task._id ? (
-          <TaskCard
-            key={task._id}
-            task={task}
-            onSave={(data) =>
-              updateTask.mutate({ id: task._id, data })
-            }
-            onCancel={() => setEditingId(null)}
-          />
-        ) : (
-          <div
-            key={task._id}
-            className="shadow-md bg-white rounded-lg p-4 flex justify-between items-center gap-4"
-          >
-            <div className="flex gap-4 justify-between flex-11 items-center">
-              <div className="">
-              <h3 className="font-medium text-lg">{task.title}</h3>
-              <p className=" text-gray-500 text-md">{task.description}</p>
+                {task.description && (
+                  <p className="text-sm text-white/60">
+                    {task.description}
+                  </p>
+                )}
+
+                <p className="text-xs text-foreground bg-blue/20 py-1 px-3 rounded-2xl">
+                  Due: {new Date(task.dueDate).toLocaleDateString()}
+                </p>
+
+                <span
+                  className={`${statusStyles[task.status].bg} ${statusStyles[task.status].text} px-3 py-1 rounded-full text-xs font-medium w-fit`}
+                >
+                  {statusLabel(task.status)}
+                </span>
+                
               </div>
-              <span className={`${statusStyle[task.status]} px-4 py-1 rounded-full text-sm font-medium`}>
-                {task.status}
-              </span>
-            </div>
 
-            <div className="flex gap-4 flex-1  ">
-              <button
-                onClick={() => setEditingId(task._id)}
-                className="text-primary cursor-pointer"
-              >
-                <Pencil />
-              </button>
-              <button
-                onClick={() => deleteTask.mutate(task._id)}
-                className="text-accent cursor-pointer"
-              >
-                <Trash2 />
-              </button>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setEditingId(task._id)}
+                  className="text-blue hover:bg-background p-2 rounded-lg transition cursor-pointer"
+                >
+                  <Pencil strokeWidth={1.5} />
+                </button>
+
+                <button
+                  onClick={() => deleteTask.mutate(task._id)}
+                  className="text-red hover:bg-red/10 p-2 rounded-lg transition cursor-pointer"
+                >
+                  <Trash2 strokeWidth={1.5} />
+                </button>
+              </div>
             </div>
-          </div>
-        )
-      )}
+          )
+        )}
+      </div>
     </div>
   );
 }
