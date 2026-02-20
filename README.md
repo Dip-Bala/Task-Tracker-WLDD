@@ -1,4 +1,4 @@
-# Flowboard - Mini Task Tracker [github](https://github.com/Dip-Bala/Task-Tracker-WLDD)
+# Flowboard - Mini Task Tracker [github]([text](https://github.com/Dip-Bala/Task-Tracker-WLDD))
 
 A full-stack Task Tracker app built with Next.js + Node.js + MongoDB + Redis.
 
