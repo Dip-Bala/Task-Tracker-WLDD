@@ -1,17 +1,32 @@
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+
 dotenv.config();
 
-const {MONGODB_URL}= process.env ;
-if(!MONGODB_URL){
-    throw Error('MongoDB url not loaded from env')
-}
-export async function connectDB(){
-    try{
-        await mongoose.connect(MONGODB_URL as string);
-        console.log("Connected to MongoDB");
-    }catch(e){
-        console.log(e)
-        console.log("Error connecting to mongodb")
-    }
+let connectingPromise: Promise<typeof mongoose> | null = null;
+
+export async function connectDB() {
+  const mongodbUrl = process.env.MONGODB_URL;
+  if (!mongodbUrl) {
+    throw new Error("MongoDB url not loaded from env");
+  }
+
+  if (mongoose.connection.readyState === 1) {
+    return;
+  }
+
+  if (!connectingPromise) {
+    connectingPromise = mongoose.connect(mongodbUrl).finally(() => {
+      connectingPromise = null;
+    });
+  }
+
+  try {
+    await connectingPromise;
+    console.log("Connected to MongoDB");
+  } catch (e) {
+    console.log(e);
+    console.log("Error connecting to mongodb");
+    throw e;
+  }
 }
